@@ -1,14 +1,18 @@
 {
-  "name": "webrtc-test",
+  "name": "webrtc-Lobby",
   "version": "1.0.0",
-  "description": "WebRTC 화상 및 채팅 프로젝트",
-  "main": "server.js",
+  "description": "WebRTC 로비",
+  "type": "commonjs",
+  "main": "app.mjs",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node app.mjs"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   },
   "dependencies": {
     "express": "^5.2.1",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "mongodb": "^7.4.0"
   }
 }
