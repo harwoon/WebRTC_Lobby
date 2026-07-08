@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>화상채팅방 로비 (학생용)</title>
+    <link rel="stylesheet" href="S_lobby.css">
+</head>
+<body>
+    <div class="lobby-container">
+        <section class="room-section">
+            <h1 class="section-title">화상채팅방 목록</h1>
+            
+            <div class="gray-background room-area">
+                <div class="room-grid" id="roomGrid">
+                    </div>
+                
+                <div class="room-actions">
+                    <button id="joinRoomBtn" class="join-room-btn">방 참가</button>
+                </div>
+            </div>
+        </section>
+
+        <aside class="sidebar-section">
+            
+            <div class="users-container">
+                <h1 class="section-title">접속자</h1>
+                <div class="gray-background user-content">
+                    <div class="user-summary" id="userCounts"></div>
+                    <hr class="divider">
+                    <div class="user-list" id="userList"></div>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <h1 class="section-title">채팅</h1>
+                <div class="gray-background chat-content">
+                    <div class="chat-history" id="chatBox"></div>
+                    <div class="chat-input-row">
+                        <select class="chat-target" id="chatTarget">
+                            <option value="all">[전체]</option>
+                        </select>
+                        <input type="text" class="chat-input" id="chatInput" placeholder="메시지를 입력하세요" autocomplete="off">
+                        <button class="send-btn" id="sendBtn">전송</button>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+    </div>
+
+    <div id="joinRoomModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>방 참가하기</h2>
+            <p>입장하실 화상채팅방의 제목을 입력해주세요.</p>
+            
+            <div class="modal-input-group">
+                <input type="text" id="joinRoomName" placeholder="예: 수학 스터디, 방제목1" autocomplete="off">
+            </div>
+            
+            <div class="modal-actions">
+                <button id="cancelJoinBtn" class="modal-btn cancel-btn">취소</button>
+                <button id="confirmJoinBtn" class="modal-btn confirm-btn">참가하기</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="S_lobby.js"></script>
+</body>
+</html>

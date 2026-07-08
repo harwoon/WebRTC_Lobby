@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>화상채팅방 로비 (선생님용)</title>
+    <link rel="stylesheet" href="T_lobby.css">
+</head>
+<body>
+    <div class="lobby-container">
+        <section class="room-section">
+            <h1 class="section-title">화상채팅방 목록</h1>
+            
+            <div class="gray-background room-area">
+                <div class="room-grid" id="roomGrid">
+                    </div>
+                
+                <div class="room-actions">
+                    <button id="createRoomBtn" class="create-room-btn">방 생성</button>
+                </div>
+            </div>
+        </section>
+
+        <aside class="sidebar-section">
+            
+            <div class="users-container">
+                <h1 class="section-title">접속자</h1>
+                <div class="gray-background user-content">
+                    <div class="user-summary" id="userCounts">
+                        </div>
+                    <hr class="divider">
+                    <div class="user-list" id="userList">
+                        </div>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <h1 class="section-title">채팅</h1>
+                <div class="gray-background chat-content">
+                    <div class="chat-history" id="chatBox">
+                        </div>
+                    <div class="chat-input-row">
+                        <select class="chat-target" id="chatTarget">
+                            <option value="all">[전체]</option>
+                        </select>
+                        <input type="text" class="chat-input" id="chatInput" placeholder="메시지를 입력하세요">
+                        <button class="send-btn" id="sendBtn">전송</button>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+    </div>
+</body>
+</html>
