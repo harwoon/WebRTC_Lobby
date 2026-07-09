@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -22,108 +23,109 @@
         </section>
 
         <aside class="sidebar-section">
-            
             <div class="users-container">
                 <h1 class="section-title">접속자</h1>
                 <div class="gray-background user-content">
-                    <div class="user-summary" id="userCounts">
-                        </div>
+                    <div class="user-summary" id="userCounts"></div>
                     <hr class="divider">
-                    <div class="user-list" id="userList">
-                        </div>
+                    <div class="user-list" id="userList"></div>
                 </div>
             </div>
 
             <div class="chat-container">
                 <h1 class="section-title">채팅</h1>
                 <div class="gray-background chat-content">
-                    <div class="chat-history" id="chatBox">
-                        </div>
+                    <div class="chat-history" id="chatBox"></div>
                     <div class="chat-input-row">
                         <select class="chat-target" id="chatTarget">
                             <option value="all">[전체]</option>
                         </select>
-                        <input type="text" class="chat-input" id="chatInput" placeholder="메시지를 입력하세요">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="메시지를 입력하세요" autocomplete="off">
                         <button class="send-btn" id="sendBtn">전송</button>
                     </div>
                 </div>
             </div>
-
         </aside>
     </div> 
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io()
-        console.log("socket created")
 
-        //token으로 사용자 정보 받아오기
+        const LOBBY_CHANNEL = "로비"
         const token = localStorage.getItem("token")
 
-        if(!token){
-            alert("로그인 정보가 없습니다. 로그인 페이지로 이동합니다.")
-            // location.href = 로그인html
-        }
-
-        let currentChannel = localStorage.getItem("channel")
-        if(!currentChannel){
-            alert("채널 정보가 없습니다")
-            // location.href = 로비새로고침? 로그인?
-        }
-
-        // token으로 유저 정보 받아오기
-        async function fetchUserInfo(){
-            try{
-
-                const response = await fetch("/auth/me", {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`
+        // 로비 입장하기
+        async function enterLobbyChat() {
+            try {
+                // 토큰이 없으면 임시 닉네임 부여 (테스트용)
+                let nickname = "선생님_" + Math.floor(Math.random() * 1000)
+                
+                if (token) {
+                    const response = await fetch("/auth/me", {
+                        method: "GET",
+                        headers: { "Authorization": `Bearer ${token}` }
+                    })
+                    if (response.ok) {
+                        const user = await response.json()
+                        nickname = user.nickname
+                    }
                 }
-            });
-
-            if (!response.ok) {
-                throw new Error("인증 실패")
-            }
-
-            const user = await response.json()
-            return user.nickname
-
-            }catch(error){
-                console.error("유저 정보를 가져오지 못했습니다:", error)
-                localStorage.removeItem("token")
-                //location.href = 로그인html
+                socket.emit("join", { nickname: nickname, channel: LOBBY_CHANNEL })
+            } catch(error) {
+                console.error("유저 정보 에러:", error)
             }
         }
         
-        // 받아온 닉네임으로 join 이벤트 발생시키기
-        async function initSocketConnection() {
-            const nickname = await fetchUserInfo();
-            
-            if (nickname) {
-                //console.log("확인된 닉네임: ", nickname);
-                socket.emit("join", { nickname, channel: currentChannel });
-            }
-        }
+        enterLobbyChat()
 
-        initSocketConnection();
-
-        // 엔터로 메세지 전송
+        // 로비 채팅창 기능
         const chatInput = document.getElementById("chatInput")
-        chatInput.addEventListener("keydown",(e)=>{
-            if(e.key === "ENTER") sendMessage()
-        })
+        const chatBox = document.getElementById("chatBox")
+        const chatTarget = document.getElementById("chatTarget")
 
-        document.getElementById("sendBtn").onclick = sendMessage
-
-        // 메세지 전송
-        function sendMessage(){
+        function sendMessage() {
             const text = chatInput.value.trim()
+            const target = chatTarget.value
             
-            if(text){
-                socket.emit("chat",{text})
+            if(text) {
+                const payload = { text: text }
+                if (target !== "all") payload.to = target
+                
+                socket.emit("chat", payload)
                 chatInput.value = ""
             }
         }
+
+        // 전송 버튼
+        chatInput.addEventListener("keydown", (e) => {
+            if(e.key === "Enter") sendMessage()
+        })
+        document.getElementById("sendBtn").addEventListener("click", sendMessage)
+
+        // 남이 보낸 메시지 화면에 띄우기
+        socket.on("message", (msg) => {
+            const messageDiv = document.createElement("div")
+            if (msg.user === "system") {
+                messageDiv.style.color = "gray"
+                messageDiv.style.fontSize = "0.9em"
+                messageDiv.textContent = `[안내] ${msg.text}`
+            } else {
+                messageDiv.style.color = "black"
+                messageDiv.textContent = `${msg.user}: ${msg.text}`
+            }
+            chatBox.appendChild(messageDiv)
+            chatBox.scrollTop = chatBox.scrollHeight
+        });
+
+        // 귓속말 화면에 띄우기
+        socket.on("whisper", (msg) => {
+            const messageDiv = document.createElement("div")
+            messageDiv.style.color = "blue"
+            messageDiv.textContent = `[귓속말] ${msg.user}: ${msg.text}`
+            chatBox.appendChild(messageDiv)
+            chatBox.scrollTop = chatBox.scrollHeight
+        })
     </script>
 </body>
 </html>

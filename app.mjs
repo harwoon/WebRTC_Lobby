@@ -25,6 +25,18 @@ app.use((req,res)=>{
     res.sendStatus(404)
 })
 
+// 길준영 수정=========================================================
+// 선생님용 주소로 접속하면 T_lobby.html을 띄워줌
+app.get("/teacher", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "T_lobby.html"))
+})
+
+// 학생용 주소로 접속하면 S_lobby.html을 띄워줌
+app.get("/student", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "S_lobby.html"))
+})
+// 길준영 수정=========================================================
+
 const users = {}
 io.on("connection", (socket) => {
     console.log("사용자가 연결되었음")

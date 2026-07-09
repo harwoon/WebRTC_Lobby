@@ -22,7 +22,6 @@
         </section>
 
         <aside class="sidebar-section">
-            
             <div class="users-container">
                 <h1 class="section-title">접속자</h1>
                 <div class="gray-background user-content">
@@ -45,26 +44,64 @@
                     </div>
                 </div>
             </div>
-
         </aside>
     </div>
 
-    <div id="joinRoomModal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>방 참가하기</h2>
-            <p>입장하실 화상채팅방의 제목을 입력해주세요.</p>
-            
-            <div class="modal-input-group">
-                <input type="text" id="joinRoomName" placeholder="예: 수학 스터디, 방제목1" autocomplete="off">
-            </div>
-            
-            <div class="modal-actions">
-                <button id="cancelJoinBtn" class="modal-btn cancel-btn">취소</button>
-                <button id="confirmJoinBtn" class="modal-btn confirm-btn">참가하기</button>
-            </div>
-        </div>
-    </div>
+    <script>
+        // 로그인 토큰 확인 로직
+        const token = localStorage.getItem("token");
 
-    <script src="/socket.io/socket.io.js"></script>
+        if(!token){
+            alert("로그인 정보가 없습니다. 로그인 페이지로 이동합니다.")
+            // location.href = "login.html"
+        }
+
+        // 백엔드에서 내 정보 가져오기
+        async function fetchUserInfo(){
+            try {
+                const response = await fetch("/auth/me", {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                })
+                if (!response.ok) throw new Error("인증 실패")
+                const user = await response.json()
+                return user.nickname
+            } catch(error) {
+                console.error("유저 정보를 가져오지 못했습니다:", error)
+                localStorage.removeItem("token")
+            }
+        }
+        
+        fetchUserInfo()
+
+        // 팝업창 UI 열고 닫는 스크립트
+        const joinRoomBtn = document.getElementById("joinRoomBtn")
+        const joinRoomModal = document.getElementById("joinRoomModal")
+        const cancelJoinBtn = document.getElementById("cancelJoinBtn")
+        const confirmJoinBtn = document.getElementById("confirmJoinBtn")
+        const joinRoomName = document.getElementById("joinRoomName")
+
+        // 참가 버튼 누르면 팝업 보이기
+        joinRoomBtn.addEventListener("click", () => {
+            joinRoomModal.style.display = "flex"
+            joinRoomName.focus()
+        })
+
+        // 취소 버튼 누르면 팝업 숨기기
+        cancelJoinBtn.addEventListener("click", () => {
+            joinRoomModal.style.display = "none"
+            joinRoomName.value = ""
+        })
+
+        // 팝업에서 참가하기 눌렀을 때의 임시 동작
+        confirmJoinBtn.addEventListener("click", () => {
+            const roomName = joinRoomName.value.trim();
+            if(roomName) {
+                alert(`'${roomName}' 방으로 입장합니다. (이후 기능 연결 필요)`)
+                joinRoomModal.style.display = "none"
+                joinRoomName.value = ""
+            }
+        })
+    </script>
 </body>
 </html>
