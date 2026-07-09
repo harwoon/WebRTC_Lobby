@@ -29,6 +29,7 @@ export const isAuth = async (req, res, next) => {
         }
         req.user = user
         req.token = token
+        console.log("middleware : isAuth")
         next()
     })
 }

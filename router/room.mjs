@@ -13,7 +13,10 @@ router.post("/create",isAuth,roomController.createRoom)
 router.get("/rooms",isAuth,roomController.getRooms)
 
 //과목별 방 가져오기
+// https://127.0.0.1:8080/room/bySubject (GET)
+router.get("/bySubject",isAuth,roomController.getRoomsbySubject)
 
 //레벨별 방 가져오기
+// https://127.0.0.1:8080/room/byLevel (GET)
 
 export default router

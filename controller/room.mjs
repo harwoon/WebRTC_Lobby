@@ -16,3 +16,10 @@ export async function getRooms(req,res){
     const rooms = await roomRepository.getAll()
     res.status(200).json(rooms)
 }
+
+// 과목별 방 가져오기
+export async function getRoomsbySubject(req,res){
+    const {subject} = req.body
+    const rooms = await roomRepository.getBySubject(subject)
+    res.status(200).json(rooms)
+}
