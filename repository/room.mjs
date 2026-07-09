@@ -1,18 +1,17 @@
 import MongoDB, { ObjectId, ReturnDocument } from "mongodb"
-import { getRooms } from "../db/database.mjs"
+import { getRooms } from "../db/user_database.mjs"
 
 // 방 생성
-export async function create(id, title, subject, level) {
-    //return id로 username 받아오기
-    /*
-        return UsersRepository.findById(id).then((user)=>getRooms().insertOne({
+export async function create(title,nickname, subject, level) {
+    return getRooms().insertOne({
         title,
-        username,
+        nickname,
         subject,
         level,
         use : true
-    })) 
-    */
+    }).then((result)=>{
+        return getRooms().findOne({_id:result.insertedId})
+    })
 }
 
 // 모든 방 가져오기

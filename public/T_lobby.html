@@ -50,6 +50,40 @@
             </div>
 
         </aside>
-    </div>
+    </div> 
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io()
+        console.log("socket created")
+
+        //token으로 사용자 정보 받아오기
+        let currentChannel = localStorage.getItem("channel")
+        if(!currentChannel){
+            alert("채널 정보가 없습니다")
+            // location.href = 로비새로고침? 로그인?
+        }
+
+        const chatInput = document.getElementById("chatInput")
+        chatInput.addEventListener("keydown",(e)=>{
+            if(e.key === "ENTER") sendMessage()
+        })
+
+        document.getElementById("sendBtn").onclick = sendMessage
+
+        function sendMessage(){
+            const text = chatInput.value.trim()
+            
+            if(text){
+                socket.emit("chat",{text})
+                chatInput.value = ""
+            }
+        }
+        
+        // token으로 objectId로 아이디/본명 받아와 저장
+        // socket.emit("join",{nickname,channel: currentChannel})
+        const nickname = "undefined" // 임시
+        socket.emit("join",{nickname,channel: currentChannel})
+
+    </script>
 </body>
 </html>

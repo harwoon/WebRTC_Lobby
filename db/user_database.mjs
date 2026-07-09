@@ -16,5 +16,5 @@ export function getUsers() {
 }
 
 export function getRooms(){
-    return db.collection("rooms")
+    return db.collection("webrtcrooms")
 }
