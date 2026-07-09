@@ -26,7 +26,6 @@ export async function getRoomsbySubject(req,res){
 
 // 레벨별 방 가져오기
 export async function getRoomsbyLevel(req,res){
-    console.log("room controller")
     const {level} = req.body
     const rooms = await roomRepository.getByLevel(level)
     res.status(200).json(rooms)
