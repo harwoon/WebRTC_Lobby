@@ -57,12 +57,57 @@
         console.log("socket created")
 
         //token으로 사용자 정보 받아오기
+        const token = localStorage.getItem("token")
+
+        if(!token){
+            alert("로그인 정보가 없습니다. 로그인 페이지로 이동합니다.")
+            // location.href = 로그인html
+        }
+
         let currentChannel = localStorage.getItem("channel")
         if(!currentChannel){
             alert("채널 정보가 없습니다")
             // location.href = 로비새로고침? 로그인?
         }
 
+        // token으로 유저 정보 받아오기
+        async function fetchUserInfo(){
+            try{
+
+                const response = await fetch("/auth/me", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error("인증 실패")
+            }
+
+            const user = await response.json()
+            return user.nickname
+
+            }catch(error){
+                console.error("유저 정보를 가져오지 못했습니다:", error)
+                localStorage.removeItem("token")
+                //location.href = 로그인html
+            }
+        }
+        
+        // 받아온 닉네임으로 join 이벤트 발생시키기
+        async function initSocketConnection() {
+            const nickname = await fetchUserInfo();
+            
+            if (nickname) {
+                //console.log("확인된 닉네임: ", nickname);
+                socket.emit("join", { nickname, channel: currentChannel });
+            }
+        }
+
+        initSocketConnection();
+
+        // 엔터로 메세지 전송
         const chatInput = document.getElementById("chatInput")
         chatInput.addEventListener("keydown",(e)=>{
             if(e.key === "ENTER") sendMessage()
@@ -70,6 +115,7 @@
 
         document.getElementById("sendBtn").onclick = sendMessage
 
+        // 메세지 전송
         function sendMessage(){
             const text = chatInput.value.trim()
             
@@ -78,12 +124,6 @@
                 chatInput.value = ""
             }
         }
-        
-        // token으로 objectId로 아이디/본명 받아와 저장
-        // socket.emit("join",{nickname,channel: currentChannel})
-        const nickname = "undefined" // 임시
-        socket.emit("join",{nickname,channel: currentChannel})
-
     </script>
 </body>
 </html>
