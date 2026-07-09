@@ -5,18 +5,19 @@ import { isAuth } from "../middleware/auth.mjs"
 const router = express.Router();
 
 //방 생성
-// https://127.0.0.1:8080/room/create (POST)
+// http://127.0.0.1:8080/room/create (POST)
 router.post("/create",isAuth,roomController.createRoom)
 
 //방 가져오기
-// https://127.0.0.1:8080/room/rooms (GET)
+// http://127.0.0.1:8080/room/rooms (GET)
 router.get("/rooms",isAuth,roomController.getRooms)
 
 //과목별 방 가져오기
-// https://127.0.0.1:8080/room/bySubject (GET)
+// http://127.0.0.1:8080/room/bySubject (GET)
 router.get("/bySubject",isAuth,roomController.getRoomsbySubject)
 
 //레벨별 방 가져오기
-// https://127.0.0.1:8080/room/byLevel (GET)
+// http://127.0.0.1:8080/room/byLevel (GET)
+router.get("/byLevel",isAuth,roomController.getRoomsbyLevel)
 
 export default router
