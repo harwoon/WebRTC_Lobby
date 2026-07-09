@@ -1,6 +1,5 @@
 import express from "express"
-import * as roomRepository from "../data/room.mjs"
-//import * as postRepository from "../data/rooms.mjs"
+import * as roomRepository from "../repository/room.mjs"
 
 // 방 생성
 /*

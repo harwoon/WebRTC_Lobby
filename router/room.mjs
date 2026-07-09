@@ -1,5 +1,5 @@
 import express from "express"
-import roomController from "../controller/room.mjs"
+import * as roomController from "../controller/room.mjs"
 
 const router = express.Router();
 
@@ -7,4 +7,4 @@ const router = express.Router();
 // 로그인 완료시 인증 미들웨어 인자로 추가
 router.post("/create",roomController.createRoom)
 
-export default router;
+export default router
