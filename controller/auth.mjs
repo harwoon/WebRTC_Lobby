@@ -14,7 +14,7 @@ export async function checkId(req, res) {
 // 회원가입
 export async function signup(req, res) {
     const { userid, userpw, nickname, username, email, userType } = req.body
-    //console.log("req.body: ", req.body)
+    // console.log("req.body: ", req.body)
 
     // 회원 중복 체크
     const found = await authRepository.findByUserid(userid)

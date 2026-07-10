@@ -127,11 +127,19 @@
                     const roomCard = document.createElement("div")
                     roomCard.className = "room-card"
 
-                    // 카드 내부 디자인 구성
+                    // 카드 내부 디자인
                     roomCard.innerHTML = `
-                    <h3 class="room-title">${room.title}</h3>
-                    <p class="room-info">과목: ${room.subject} | 수준: ${room.level}</p>
-                    <p class="room-host">선생님: ${room.nickname}</p>
+                    <div class="room-header">
+                        <h2 class="room-title">${room.title}</h2>
+                        <div class="room-status">
+                            <span class="status-dot green"></span>
+                        </div>
+                    </div>
+                    <div class="host-name">${room.nickname} 선생님</div>
+                    <div class="room-tags">
+                        <span class="tag subject-tag">${room.subject}</span>
+                        <span class="tag level-tag">${room.level}</span>
+                    </div>
                     `
 
                     roomCard.dataset.roomId = room._id;

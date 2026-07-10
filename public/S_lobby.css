@@ -152,9 +152,31 @@ body {
 }
 
 .room-tags {
-    font-size: 12px;
-    color: #999;
+    display: flex;
+    gap: 8px;
     margin-top: auto;
+    flex-wrap: wrap;
+}
+
+
+.tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 8px;
+    letter-spacing: -0.3px;
+}
+
+
+.subject-tag {
+    background-color: #e3e7ee;
+    color: #536279;
+}
+
+
+.level-tag {
+    background-color: #eeeae2;
+    color: #726857;
 }
 
 /* -----------------------------
