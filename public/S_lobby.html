@@ -36,7 +36,11 @@
                     <div class="chat-input-row">
                         <select class="chat-target" id="chatTarget">
                             <option value="all">[전체]</option>
+                            <option value="whisper">[귓속말]</option>
                         </select>
+
+                        <input type="text" class="chat-target-input" id="chatTargetInput" placeholder="상대방 닉네임" style="display: none; width: 90px;" autocomplete="off">
+
                         <input type="text" class="chat-input" id="chatInput" placeholder="메시지를 입력하세요"
                             autocomplete="off">
                         <button class="send-btn" id="sendBtn">전송</button>

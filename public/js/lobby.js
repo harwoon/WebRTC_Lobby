@@ -2,6 +2,7 @@ const roomGrid = document.getElementById("roomGrid")
 const chatInput = document.getElementById("chatInput")
 const chatBox = document.getElementById("chatBox")
 const chatTarget = document.getElementById("chatTarget")
+const chatTargetInput = document.getElementById("chatTargetInput")
 
 const socket = io()
 const _token = localStorage.getItem("token")
@@ -14,7 +15,7 @@ async function fetchUserInfo() {
             headers: { "Authorization": `Bearer ${_token}` }
         })
         if (!response.ok) throw new Error("인증 실패")
-        const {token, user} = await response.json()
+        const { token, user } = await response.json()
         return user.nickname
     } catch (error) {
         console.error("유저 정보를 가져오지 못했습니다:", error)
@@ -83,20 +84,34 @@ roomGrid.addEventListener("click", (e) => {
 
 function sendMessage() {
     const text = chatInput.value.trim()
-    const target = chatTarget.value
-    
-    if(text) {
+    const targetType = chatTarget.value
+    const whisperTo = chatTargetInput.value.trim()
+
+    if (text) {
         const payload = { text: text }
-        if (target !== "all") payload.to = target
-        
+
+        // 귓속말인 경우 처리
+        if (targetType === "whisper") {
+            if (!whisperTo) {
+                alert("귓속말 상대를 입력하세요.")
+                chatTargetInput.focus()
+                return
+            }
+            payload.to = whisperTo
+        }
+
         socket.emit("chat", payload)
+
         chatInput.value = ""
+        if(targetType==="whisper"){
+            chatTargetInput.value=""
+        }
     }
 }
 
 // 전송 버튼
 chatInput.addEventListener("keydown", (e) => {
-    if(e.key === "Enter") sendMessage()
+    if (e.key === "Enter") sendMessage()
 })
 document.getElementById("sendBtn").addEventListener("click", sendMessage)
 
@@ -113,7 +128,18 @@ socket.on("message", (msg) => {
     }
     chatBox.appendChild(messageDiv)
     chatBox.scrollTop = chatBox.scrollHeight
-});
+})
+
+// select 변경 이벤트 (귓속말 선택 시 인풋창 토글)
+chatTarget.addEventListener("change", () => {
+    if (chatTarget.value === "whisper") {
+        chatTargetInput.style.display = "block"
+        chatTargetInput.focus();
+    } else {
+        chatTargetInput.style.display = "none"
+        chatTargetInput.value = ""
+    }
+})
 
 // 귓속말 화면에 띄우기
 socket.on("whisper", (msg) => {
@@ -125,12 +151,12 @@ socket.on("whisper", (msg) => {
 })
 
 async function initLobby() {
-    const nickname = await fetchUserInfo();
+    const nickname = await fetchUserInfo()
 
     if (nickname) {
-        socket.emit("join", { nickname, channel: "로비" });
+        socket.emit("join", { nickname, channel: "로비" })
     }
-    fetchRooms();
+    fetchRooms()
 }
 
-initLobby();
+initLobby()

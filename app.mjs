@@ -46,21 +46,23 @@ io.on("connection", (socket) => {
         io.to(channel).emit("message", msg)
     })
 
-    socket.on("chat", ({ text, to }) => {
+    socket.on("chat", ({ text, to }) =>{
         const sender = users[socket.id]
-        if (!sender) return
+        if(!sender) return
         const payload = { user: sender.nickname, text }
-        if (to) {
+        if(to){
             const receiverSocket = Object.entries(users).find(
-                ([id, u]) => u.nickname === to
-            )?.[0]
-            if (receiverSocket) {
+                ([id, u]) => u.nickname === to)?.[0]
+            if(receiverSocket){
                 io.to(receiverSocket).emit("whisper", payload)
                 socket.emit("whisper", payload)
             }
-        } else {
+        }else{
             io.to(sender.channel).emit("message", payload)
+            console.log("sender.channel: ", sender.channel, "payload:", payload)
         }
+        
+    
     })
 
     socket.on("disconnect", () => {
