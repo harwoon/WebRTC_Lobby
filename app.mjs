@@ -75,7 +75,7 @@ io.on("connection", (socket) => {
 })
 
 connectDB().then(() => {
-    app.listen(config.host.port, () => {
+    server.listen(config.host.port, () => {
         console.log("WebRTC 과제 DB/웹 서버 실행 중 ...")
     })
 }).catch((err) => { 

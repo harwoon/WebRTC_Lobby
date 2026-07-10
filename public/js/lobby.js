@@ -1,0 +1,136 @@
+const roomGrid = document.getElementById("roomGrid")
+const chatInput = document.getElementById("chatInput")
+const chatBox = document.getElementById("chatBox")
+const chatTarget = document.getElementById("chatTarget")
+
+const socket = io()
+const _token = localStorage.getItem("token")
+
+// 백엔드에서 내 정보 가져오기
+async function fetchUserInfo() {
+    try {
+        const response = await fetch("/auth/me", {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${_token}` }
+        })
+        if (!response.ok) throw new Error("인증 실패")
+        const {token, user} = await response.json()
+        return user.nickname
+    } catch (error) {
+        console.error("유저 정보를 가져오지 못했습니다:", error)
+        localStorage.removeItem("token")
+    }
+}
+
+// 방 목록 가져오기
+async function fetchRooms() {
+    try {
+        const response = await fetch("/room/rooms")
+
+        if (!response.ok) {
+            throw new Error("방 정보를 불러오지 못했습니다")
+        }
+
+        const rooms = await response.json()
+
+        roomGrid.innerHTML = ""
+
+        if (rooms.length === 0) {
+            roomGrid.innerHTML = `<p class="no-room">개설된 방이 없습니다.</p>`;
+            return;
+        }
+
+        rooms.forEach(room => {
+            const roomCard = document.createElement("div")
+            roomCard.className = "room-card"
+
+            // 카드 내부 디자인
+            roomCard.innerHTML = `
+            <div class="room-header">
+                <h2 class="room-title">${room.title}</h2>
+                <div class="room-status">
+                    <span class="status-dot green"></span>
+                </div>
+            </div>
+            <div class="host-name">${room.nickname} 선생님</div>
+            <div class="room-tags">
+                <span class="tag subject-tag">${room.subject}</span>
+                <span class="tag level-tag">${room.level}</span>
+            </div>
+            `
+
+            roomCard.dataset.roomId = room._id
+
+            roomGrid.appendChild(roomCard)
+        });
+    } catch (error) {
+        console.error(error)
+    }
+
+}
+
+// 방 클릭 이벤트
+roomGrid.addEventListener("click", (e) => {
+    const card = e.target.closest(".room-card")
+    if (!card) return;
+
+    const roomId = card.dataset.roomId
+    console.log("선택된 방 ID:", roomId)
+
+    // localStorage.setItem("channel", roomId);
+    // location.href = "/room.html";
+})
+
+function sendMessage() {
+    const text = chatInput.value.trim()
+    const target = chatTarget.value
+    
+    if(text) {
+        const payload = { text: text }
+        if (target !== "all") payload.to = target
+        
+        socket.emit("chat", payload)
+        chatInput.value = ""
+    }
+}
+
+// 전송 버튼
+chatInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter") sendMessage()
+})
+document.getElementById("sendBtn").addEventListener("click", sendMessage)
+
+// 남이 보낸 메시지 화면에 띄우기
+socket.on("message", (msg) => {
+    const messageDiv = document.createElement("div")
+    if (msg.user === "system") {
+        messageDiv.style.color = "gray"
+        messageDiv.style.fontSize = "0.9em"
+        messageDiv.textContent = `[안내] ${msg.text}`
+    } else {
+        messageDiv.style.color = "black"
+        messageDiv.textContent = `${msg.user}: ${msg.text}`
+    }
+    chatBox.appendChild(messageDiv)
+    chatBox.scrollTop = chatBox.scrollHeight
+});
+
+// 귓속말 화면에 띄우기
+socket.on("whisper", (msg) => {
+    const messageDiv = document.createElement("div")
+    messageDiv.style.color = "blue"
+    messageDiv.textContent = `[귓속말] ${msg.user}: ${msg.text}`
+    chatBox.appendChild(messageDiv)
+    chatBox.scrollTop = chatBox.scrollHeight
+})
+
+async function initLobby() {
+    const nickname = await fetchUserInfo();
+
+    if (nickname) {
+        socket.emit("join", { nickname, channel: "로비" });
+    }
+    fetchRooms();
+}
+
+initLobby();
