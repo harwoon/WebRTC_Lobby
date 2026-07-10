@@ -3,6 +3,9 @@ const chatInput = document.getElementById("chatInput")
 const chatBox = document.getElementById("chatBox")
 const chatTarget = document.getElementById("chatTarget")
 const chatTargetInput = document.getElementById("chatTargetInput")
+const createRoomBtn = document.getElementById("createRoomBtn")
+const userCounts = document.getElementById("userCounts");
+const userListDiv = document.getElementById("userList");
 
 const socket = io()
 const _token = localStorage.getItem("token")
@@ -68,6 +71,54 @@ async function fetchRooms() {
         console.error(error)
     }
 
+}
+
+// 방 생성 버튼 이벤트===========================================
+
+if (createRoomBtn) {
+    createRoomBtn.addEventListener("click", async () => {
+        const title = prompt("방 제목을 입력하세요:")
+        if (!title) return
+        
+        const subject = prompt("과목 태그를 입력하세요.")
+        const level = prompt("수준 태그를 입력하세요.")
+
+        const userId = localStorage.getItem("_id")
+        const token = localStorage.getItem("token")
+
+        if (!token) {
+            alert("로그인이 필요합니다!")
+            return;
+        }
+
+        try {
+            const response = await fetch("/room/create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` 
+                },
+                body: JSON.stringify({
+                    title: title,
+                    subject: subject,
+                    level: level,
+                    userId: userId
+                })
+            });
+
+            const result = await response.json()
+
+            if (response.ok) {
+                alert("방이 생성되었습니다!")
+                window.location.href = `/room.html?roomId=${result._id}`;
+            } else {
+                alert("방 생성 실패: " + (result.message || "알 수 없는 오류"));
+            }
+        } catch (error) {
+            console.error("방 생성 중 오류:", error)
+            alert("서버와 통신 중 문제가 발생했습니다.")
+        }
+    })
 }
 
 // 방 클릭 이벤트
@@ -151,12 +202,54 @@ socket.on("whisper", (msg) => {
 })
 
 async function initLobby() {
-    const nickname = await fetchUserInfo()
-
-    if (nickname) {
-        socket.emit("join", { nickname, channel: "로비" })
+    try {
+        const response = await fetch("/auth/me", {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${_token}` }
+        })
+        if (!response.ok) throw new Error("인증 실패")
+        const { user } = await response.json()
+        
+        socket.emit("join", { 
+            nickname: user.nickname, 
+            channel: "로비", 
+            userType: user.userType 
+        });
+    } catch (error) {
+        console.error("유저 정보를 가져오지 못했습니다:", error)
     }
     fetchRooms()
 }
+
+socket.on("userCounts", ({ tCount, sCount }) => {
+    if (userCounts) {
+        userCounts.innerHTML = `
+            <span>선생님: ${tCount}명</span> | 
+            <span>학생: ${sCount}명</span>
+        `
+    }
+})
+
+socket.on("userCounts", ({ tCount, sCount }) => {
+    if (userCounts) {
+        userCounts.innerHTML = `
+            <span class="count-badge teacher">선생님 ${tCount}명</span>
+            <span class="count-badge student">학생 ${sCount}명</span>
+        `;
+    }
+});
+
+socket.on("userList", (users) => {
+    if (userListDiv) {
+        userListDiv.innerHTML = ""
+        users.forEach(u => {
+            const div = document.createElement("div")
+            div.className = "user-item"
+            const roleBadge = u.userType === "teacher" ? "[선생님]" : "[학생]"
+            div.textContent = `${roleBadge} ${u.nickname}`
+            userListDiv.appendChild(div)
+        });
+    }
+})
 
 initLobby()

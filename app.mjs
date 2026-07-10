@@ -1,4 +1,3 @@
-// 로비 테스트용
 import express from "express"
 import { createServer } from "http"
 import { Server } from "socket.io"
@@ -28,10 +27,27 @@ app.use((req,res)=>{
 })
 
 const users = {}
+
+function updateUserList() {
+    let tCount = 0;
+    let sCount = 0;
+    const userList = [];
+
+    Object.values(users).forEach(u => {
+        if (u.userType === "teacher") tCount++;
+        else if (u.userType === "student") sCount++;
+        userList.push({ nickname: u.nickname, userType: u.userType });
+    });
+
+
+    io.to("로비").emit("userCounts", { tCount, sCount });
+    io.to("로비").emit("userList", userList);
+}
+
 io.on("connection", (socket) => {
     console.log("사용자가 연결되었음")
 
-    socket.on("join", ({ nickname, channel }) => {
+    socket.on("join", ({ nickname, channel, userType }) => {
         Object.keys(users).forEach((id) => {
             if (users[id].nickname === nickname) {
                 delete users[id]
@@ -39,11 +55,13 @@ io.on("connection", (socket) => {
         })
         socket.nickname = nickname
         socket.channel = channel
-        users[socket.id] = { nickname, channel }
+        users[socket.id] = { nickname, channel,userType }
         socket.join(channel)
 
         const msg = { user: "system", text: `${nickname}님이 입장했습니다` }
         io.to(channel).emit("message", msg)
+
+        updateUserList()
     })
 
     socket.on("chat", ({ text, to }) =>{
@@ -71,6 +89,7 @@ io.on("connection", (socket) => {
             const msg = { user: "system", text: `${user.nickname}님이 퇴장했습니다` }
             io.to(user.channel).emit("message", msg)
             delete users[socket.id]
+            updateUserList()
         }
         console.log("사용자가 퇴장함")
     })
