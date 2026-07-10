@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>임시 과외방 (테스트용)</title>
+    <title>온라인 과외방 (테스트)</title>
     <style>
         body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
         .room-container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -12,14 +12,14 @@
         .input-row { display: flex; gap: 10px; }
         .input-row input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
         .input-row button { padding: 10px 20px; background: #5c7cfa; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .exit-btn { width: 100%; margin-top: 20px; padding: 12px; background: #fa5252; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .exit-btn { width: 100%; margin-top: 20px; padding: 12px; background: #ced4da; color: black; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-    // ==============이 html은 임시 과외방입니다======================
     <div class="room-container">
-        <h2 id="roomTitle">과외방 접속 중...</h2>
-        <p id="roomInfo" style="color: gray;"></p>
+        <h2 id="roomTitle">📖 실시간 과외방</h2>
+        <p id="userWelcome" style="font-weight: bold; color: #4c6ef5;"></p>
+        <p id="roomInfo" style="color: gray; font-size: 0.9em;"></p>
 
         <div class="video-placeholder">📷 [카메라 화면 공간 - WebRTC 연결 예정]</div>
 
@@ -30,7 +30,7 @@
             <button id="sendBtn">전송</button>
         </div>
 
-        <button id="exitRoomBtn" class="exit-btn">❌ 방 종료 및 나가기 (목록에서 삭제)</button>
+        <button id="exitRoomBtn" class="exit-btn">🚪 나가기 (로비로 돌아가기)</button>
     </div>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -46,11 +46,13 @@
             location.href = "/";
         }
 
-        document.getElementById("roomInfo").textContent = `방 고유 ID: ${roomId}`;
+        document.getElementById("roomInfo").textContent = `방 고유 번호: ${roomId}`;
 
         async function enterRoom() {
             try {
                 let nickname = "게스트_" + Math.floor(Math.random() * 1000);
+                
+                // 🌟 선생님이든 학생이든 각자의 토큰으로 본인의 진짜 닉네임을 구합니다.
                 if (token) {
                     const response = await fetch("/auth/me", {
                         method: "GET",
@@ -61,7 +63,10 @@
                         nickname = user.nickname;
                     }
                 }
-                document.getElementById("roomTitle").textContent = `🚪 [${nickname}] 님의 과외방`;
+                
+                document.getElementById("userWelcome").textContent = `👋 안녕하세요, ${nickname} 님!`;
+                
+                // 🌟 중요: 주소창에 달린 방ID(`room_방ID`) 채널로 묶어 접속하여 독립된 대화방을 생성합니다.
                 socket.emit("join", { nickname: nickname, channel: `room_${roomId}` });
             } catch (error) {
                 console.error("유저 정보 로드 실패:", error);
@@ -91,32 +96,9 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         });
 
-        // 🌟 [추가] 나가기 버튼 클릭 시 백엔드 API를 호출해 use: false로 변경 후 로비로 강제 이동하는 로직
-        document.getElementById("exitRoomBtn").addEventListener("click", async () => {
-            const confirmExit = confirm("방을 종료하시겠습니까? 종료 시 로비 목록에서 삭제됩니다.");
-            if (!confirmExit) return;
-
-            try {
-                const response = await fetch("/room/delete", {
-                    method: "POST", // 백엔드 라우터 규칙에 맞춰 POST 요청
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}` // 권한 인증용 토큰 전송
-                    },
-                    body: JSON.stringify({ roomId: roomId }) // 바디에 파괴할 방의 고유 ID 탑재
-                });
-
-                if (response.ok) {
-                    alert("방이 정상적으로 종료되었습니다.");
-                    location.href = "/"; // 로비 페이지 주소로 이동
-                } else {
-                    const errResult = await response.json();
-                    alert("방 종료 실패: " + errResult.message);
-                }
-            } catch (error) {
-                console.error("방 종료 처리 중 통신 에러:", error);
-                alert("서버 연결에 실패했습니다.");
-            }
+        // 단순히 로비로 되돌아가는 나가기 기능 (방 삭제 API 연동은 패스)
+        document.getElementById("exitRoomBtn").addEventListener("click", () => {
+            location.href = "/"; 
         });
     </script>
 </body>

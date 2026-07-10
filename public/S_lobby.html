@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>화상채팅방 로비 (학생용)</title>
     <link rel="stylesheet" href="/css/S_lobby.css">
-</head>
-
+    </head>
 <body>
     <div class="lobby-container">
         <section class="room-section">
             <h1 class="section-title">화상채팅방 목록</h1>
-
+            
             <div class="gray-background room-area">
                 <div class="room-grid" id="roomGrid">
+                    </div>
+                
                 </div>
-            </div>
         </section>
 
         <aside class="sidebar-section">
@@ -37,79 +36,144 @@
                         <select class="chat-target" id="chatTarget">
                             <option value="all">[전체]</option>
                         </select>
-                        <input type="text" class="chat-input" id="chatInput" placeholder="메시지를 입력하세요"
-                            autocomplete="off">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="메시지를 입력하세요" autocomplete="off">
                         <button class="send-btn" id="sendBtn">전송</button>
                     </div>
                 </div>
             </div>
         </aside>
-    </div>
+    </div> 
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/lobby.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
-        // 로그인 토큰 확인 로직
-        const tk = localStorage.getItem("token")
+        const socket = io()
 
-        if (!tk) {
-            alert("로그인 정보가 없습니다. 로그인 페이지로 이동합니다.")
-        }
-
+        const LOBBY_CHANNEL = "로비"
         const token = localStorage.getItem("token")
 
-        async function loadRoomsForStudent() {
+        // 로비 입장하기
+        async function enterLobbyChat() {
+            try {
+                // 토큰이 없으면 임시 닉네임 부여 (테스트용)
+                let nickname = "학생_" + Math.floor(Math.random() * 1000)
+                
+                if (token) {
+                    const response = await fetch("/auth/me", {
+                        method: "GET",
+                        headers: { "Authorization": `Bearer ${token}` }
+                    })
+                    if (response.ok) {
+                        const user = await response.json()
+                        nickname = user.nickname
+                    }
+                }
+                socket.emit("join", { nickname: nickname, channel: LOBBY_CHANNEL })
+            } catch(error) {
+                console.error("유저 정보 에러:", error)
+            }
+        }
+        
+        enterLobbyChat()
+
+        // 로비 채팅창 기능
+        const chatInput = document.getElementById("chatInput")
+        const chatBox = document.getElementById("chatBox")
+        const chatTarget = document.getElementById("chatTarget")
+
+        function sendMessage() {
+            const text = chatInput.value.trim()
+            const target = chatTarget.value
+            
+            if(text) {
+                const payload = { text: text }
+                if (target !== "all") payload.to = target
+                
+                socket.emit("chat", payload)
+                chatInput.value = ""
+            }
+        }
+
+        // 전송 버튼
+        chatInput.addEventListener("keydown", (e) => {
+            if(e.key === "Enter") sendMessage()
+        })
+        document.getElementById("sendBtn").addEventListener("click", sendMessage)
+
+        // 남이 보낸 메시지 화면에 띄우기
+        socket.on("message", (msg) => {
+            const messageDiv = document.createElement("div")
+            if (msg.user === "system") {
+                messageDiv.style.color = "gray"
+                messageDiv.style.fontSize = "0.9em"
+                messageDiv.textContent = `[안내] ${msg.text}`
+            } else {
+                messageDiv.style.color = "black"
+                messageDiv.textContent = `${msg.user}: ${msg.text}`
+            }
+            chatBox.appendChild(messageDiv)
+            chatBox.scrollTop = chatBox.scrollHeight
+        });
+
+        // 귓속말 화면에 띄우기
+        socket.on("whisper", (msg) => {
+            const messageDiv = document.createElement("div")
+            messageDiv.style.color = "blue"
+            messageDiv.textContent = `[귓속말] ${msg.user}: ${msg.text}`
+            chatBox.appendChild(messageDiv)
+            chatBox.scrollTop = chatBox.scrollHeight
+        })
+
+
+        // 생성된 방에 학생이 입장 할 수 있게하는 함수
+        async function loadRooms() {
             try {
                 const response = await fetch("/room/rooms")
                 if (!response.ok) throw new Error("방 목록을 불러오지 못했습니다.")
                 
                 const rooms = await response.json()
-
                 const roomGrid = document.getElementById("roomGrid")
-                if(!roomGrid) return
-                
                 roomGrid.innerHTML = ""
+
 
                 rooms.forEach(room => {
                     if (room.use) {
                         const card = document.createElement("div")
                         card.className = "room-card"
                         card.style.cursor = "pointer"
-
                         card.innerHTML = `
                             <div class="card-header">
                                 <h3>${room.title}</h3>
+                                <span class="status-dot"></span>
                             </div>
-                            <p>${room.username} 선생님</p>
+                            <p class="teacher-name">${room.username} 선생님</p>
                             <div class="tag-group">
-                                <span class="tag">${room.subject}</span>
-                                <span class="tag">${room.level}</span>
+                                <span class="tag subject-tag">#${room.subject}</span>
+                                <span class="tag level-tag">#${room.level}</span>
                             </div>
                         `
-
-                        // 학생용 아이디가 참가를 눌렀을 때 방에 들어가지는 이벤트
                         card.addEventListener("click", () => {
                             if (!token) {
                                 alert("로그인이 필요한 서비스입니다.")
                                 return
                             }
                             
-                            const confirmEnter = confirm(`'${room.title}' 과외방에 입장하시겠습니까?`)
+                            const confirmEnter = confirm(`'${room.title}' 과외방에 참여하시겠습니까?`)
                             if (confirmEnter) {
                                 window.location.href = `/room.html?roomId=${room._id}`
                             }
                         })
-
                         roomGrid.appendChild(card)
                     }
                 })
+
             } catch (error) {
-                console.error("학생 화면 방 로드 에러:", error)
+                console.error("학생 로비 방 목록 로드 에러:", error)
             }
         }
 
-        loadRoomsForStudent()
+        
+        loadRooms();
+        
     </script>
 </body>
-
 </html>
