@@ -21,4 +21,8 @@ router.get("/bySubject",isAuth,roomController.getRoomsbySubject)
 // http://127.0.0.1:8080/room/byLevel (GET)
 router.get("/byLevel",isAuth,roomController.getRoomsbyLevel)
 
+// 임시 과외방 나가기 시 방 삭제=========================
+// http://127.0.0.1:8080/room/delete (POST)
+router.post("/delete", isAuth, roomController.deleteRoom)
+
 export default router

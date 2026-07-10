@@ -50,12 +50,65 @@
     <script src="/js/lobby.js"></script>
     <script>
         // 로그인 토큰 확인 로직
-        const tk = localStorage.getItem("token");
+        const tk = localStorage.getItem("token")
 
         if (!tk) {
             alert("로그인 정보가 없습니다. 로그인 페이지로 이동합니다.")
-            // location.href = "login.html"
         }
+
+        const token = localStorage.getItem("token")
+
+        async function loadRoomsForStudent() {
+            try {
+                const response = await fetch("/room/rooms")
+                if (!response.ok) throw new Error("방 목록을 불러오지 못했습니다.")
+                
+                const rooms = await response.json()
+
+                const roomGrid = document.getElementById("roomGrid")
+                if(!roomGrid) return
+                
+                roomGrid.innerHTML = ""
+
+                rooms.forEach(room => {
+                    if (room.use) {
+                        const card = document.createElement("div")
+                        card.className = "room-card"
+                        card.style.cursor = "pointer"
+
+                        card.innerHTML = `
+                            <div class="card-header">
+                                <h3>${room.title}</h3>
+                            </div>
+                            <p>${room.username} 선생님</p>
+                            <div class="tag-group">
+                                <span class="tag">${room.subject}</span>
+                                <span class="tag">${room.level}</span>
+                            </div>
+                        `
+
+                        // 학생용 아이디가 참가를 눌렀을 때 방에 들어가지는 이벤트
+                        card.addEventListener("click", () => {
+                            if (!token) {
+                                alert("로그인이 필요한 서비스입니다.")
+                                return
+                            }
+                            
+                            const confirmEnter = confirm(`'${room.title}' 과외방에 입장하시겠습니까?`)
+                            if (confirmEnter) {
+                                window.location.href = `/room.html?roomId=${room._id}`
+                            }
+                        })
+
+                        roomGrid.appendChild(card)
+                    }
+                })
+            } catch (error) {
+                console.error("학생 화면 방 로드 에러:", error)
+            }
+        }
+
+        loadRoomsForStudent()
     </script>
 </body>
 
