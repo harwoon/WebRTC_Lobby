@@ -52,7 +52,6 @@
             try {
                 let nickname = "게스트_" + Math.floor(Math.random() * 1000);
                 
-                // 🌟 선생님이든 학생이든 각자의 토큰으로 본인의 진짜 닉네임을 구합니다.
                 if (token) {
                     const response = await fetch("/auth/me", {
                         method: "GET",
@@ -66,7 +65,6 @@
                 
                 document.getElementById("userWelcome").textContent = `👋 안녕하세요, ${nickname} 님!`;
                 
-                // 🌟 중요: 주소창에 달린 방ID(`room_방ID`) 채널로 묶어 접속하여 독립된 대화방을 생성합니다.
                 socket.emit("join", { nickname: nickname, channel: `room_${roomId}` });
             } catch (error) {
                 console.error("유저 정보 로드 실패:", error);
@@ -96,10 +94,36 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         });
 
-        // 단순히 로비로 되돌아가는 나가기 기능 (방 삭제 API 연동은 패스)
-        document.getElementById("exitRoomBtn").addEventListener("click", () => {
-            location.href = "/"; 
+
+        // //====== [수정] 단순히 로비 페이지로만 이동하던 나가기 버튼에 백엔드 삭제 API 호출 연동 ======
+        document.getElementById("exitRoomBtn").addEventListener("click", async () => {
+            const confirmExit = confirm("방을 종료하시겠습니까? 종료 시 로비 목록에서 삭제됩니다.");
+            if (!confirmExit) return;
+
+            try {
+                // 이전에 구현해둔 백엔드 라우터 '/room/delete' 주소로 POST 요청을 보냅니다.
+                const response = await fetch("/room/delete", {
+                    method: "POST", 
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}` // 로그인 토큰 탑재
+                    },
+                    body: JSON.stringify({ roomId: roomId }) // body에 현재 가동 중인 방 ID를 실어 보냅니다.
+                });
+
+                if (response.ok) {
+                    alert("방이 성공적으로 종료되어 목록에서 삭제되었습니다.");
+                    location.href = "/"; // 메인 로비로 이동
+                } else {
+                    const errResult = await response.json();
+                    alert("방 종료 실패: " + (errResult.message || "알 수 없는 오류"));
+                }
+            } catch (error) {
+                console.error("방 종료 처리 중 통신 에러:", error);
+                alert("서버와 통신하는 중 문제가 발생했습니다.");
+            }
         });
+        // //====== ======================================================================================= ======
     </script>
 </body>
 </html>
