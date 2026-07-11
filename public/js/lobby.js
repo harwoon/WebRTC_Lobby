@@ -6,9 +6,12 @@ const chatTargetInput = document.getElementById("chatTargetInput")
 const createRoomBtn = document.getElementById("createRoomBtn")
 const userCounts = document.getElementById("userCounts");
 const userListDiv = document.getElementById("userList");
+const channelSelect = document.getElementById("channelSelect")
 
 const socket = io()
 const _token = localStorage.getItem("token")
+
+let currentChannel = "로비"
 
 // 백엔드에서 내 정보 가져오기
 async function fetchUserInfo() {
@@ -220,6 +223,28 @@ async function initLobby() {
     }
     fetchRooms()
 }
+
+channelSelect.addEventListener("change", () => {
+    const newChannelText = channelSelect.options[channelSelect.selectedIndex].text
+    const newChannelValue = channelSelect.value
+    
+    if (newChannelValue === currentChannel) return;
+
+    socket.emit("switchChannel", { 
+        prevChannel: currentChannel, 
+        nextChannel: newChannelValue 
+    })
+
+    currentChannel = newChannelValue
+
+    const noticeDiv = document.createElement("div")
+    noticeDiv.style.color = "purple"
+    noticeDiv.style.fontSize = "0.9em"
+    noticeDiv.textContent = `[안내] '${newChannelText}' 채널로 이동했습니다.`
+    
+    chatBox.appendChild(noticeDiv)
+    chatBox.scrollTop = chatBox.scrollHeight
+});
 
 socket.on("userCounts", ({ tCount, sCount }) => {
     if (userCounts) {

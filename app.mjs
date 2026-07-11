@@ -19,10 +19,10 @@ const __dirname = path.dirname(__filename)
 app.use(express.json())
 app.use(express.static(path.join(__dirname, "public")))
 app.use("/auth", authRouter)
-app.use("/room",roomRouter)
-app.use("/lobby",lobbyRouter)
+app.use("/room", roomRouter)
+app.use("/lobby", lobbyRouter)
 
-app.use((req,res)=>{
+app.use((req, res) => {
     res.sendStatus(404)
 })
 
@@ -55,7 +55,7 @@ io.on("connection", (socket) => {
         })
         socket.nickname = nickname
         socket.channel = channel
-        users[socket.id] = { nickname, channel,userType }
+        users[socket.id] = { nickname, channel, userType }
         socket.join(channel)
 
         const msg = { user: "system", text: `${nickname}님이 입장했습니다` }
@@ -64,23 +64,41 @@ io.on("connection", (socket) => {
         updateUserList()
     })
 
-    socket.on("chat", ({ text, to }) =>{
+    socket.on("chat", ({ text, to }) => {
         const sender = users[socket.id]
-        if(!sender) return
+        if (!sender) return
         const payload = { user: sender.nickname, text }
-        if(to){
+        if (to) {
             const receiverSocket = Object.entries(users).find(
                 ([id, u]) => u.nickname === to)?.[0]
-            if(receiverSocket){
+            if (receiverSocket) {
                 io.to(receiverSocket).emit("whisper", payload)
                 socket.emit("whisper", payload)
             }
-        }else{
+        } else {
             io.to(sender.channel).emit("message", payload)
             console.log("sender.channel: ", sender.channel, "payload:", payload)
         }
-        
-    
+
+
+    })
+
+    socket.on("switchChannel", ({ prevChannel, nextChannel }) => {
+        const user = users[socket.id]
+        if (!user) return
+
+        socket.leave(prevChannel)
+        const leaveMsg = { user: "system", text: `${user.nickname}님이 채널을 나갔습니다.` }
+        io.to(prevChannel).emit("message", leaveMsg);
+
+        socket.join(nextChannel)
+        user.channel = nextChannel
+        socket.channel = nextChannel
+
+        const joinMsg = { user: "system", text: `${user.nickname}님이 입장했습니다.` }
+        io.to(nextChannel).emit("message", joinMsg)
+
+        updateUserList()
     })
 
     socket.on("disconnect", () => {
@@ -99,7 +117,7 @@ connectDB().then(() => {
     server.listen(config.host.port, () => {
         console.log("WebRTC 과제 DB/웹 서버 실행 중 ...")
     })
-}).catch((err) => { 
+}).catch((err) => {
     console.log("서버 연결 실패")
     console.error(err)
 })
