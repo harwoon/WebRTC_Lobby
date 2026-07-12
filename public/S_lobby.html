@@ -10,6 +10,23 @@
     <div class="lobby-container">
         <section class="room-section">
             <h1 class="section-title">화상채팅방 목록</h1>
+            <div class="filter-row">
+                <select id="subjectFilter" class="filter-select">
+                    <option value="all">모든 과목</option>
+                    <option value="국어">국어</option>
+                    <option value="영어">영어</option>
+                    <option value="수학">수학</option>
+                    <option value="사회">사회</option>
+                    <option value="과학">과학</option>
+                </select>
+                
+                <select id="levelFilter" class="filter-select">
+                    <option value="all">모든 수준</option>
+                    <option value="초등학생">초등학생</option>
+                    <option value="중학생">중학생</option>
+                    <option value="고등학생">고등학생</option>
+                </select>
+            </div>
             
             <div class="gray-background room-area">
                 <div class="room-grid" id="roomGrid">

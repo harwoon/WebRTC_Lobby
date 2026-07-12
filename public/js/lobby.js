@@ -4,9 +4,11 @@ const chatBox = document.getElementById("chatBox")
 const chatTarget = document.getElementById("chatTarget")
 const chatTargetInput = document.getElementById("chatTargetInput")
 const createRoomBtn = document.getElementById("createRoomBtn")
-const userCounts = document.getElementById("userCounts");
-const userListDiv = document.getElementById("userList");
+const userCounts = document.getElementById("userCounts")
+const userListDiv = document.getElementById("userList")
 const channelSelect = document.getElementById("channelSelect")
+const subjectFilter = document.getElementById("subjectFilter")
+const levelFilter = document.getElementById("levelFilter")
 
 const socket = io()
 const _token = localStorage.getItem("token")
@@ -30,51 +32,84 @@ async function fetchUserInfo() {
 }
 
 // 방 목록 가져오기
+function renderRooms(roomsToRender) {
+    roomGrid.innerHTML = ""
+
+    if (roomsToRender.length === 0) {
+        roomGrid.innerHTML = `<p class="no-room">조건에 맞는 방이 없습니다.</p>`
+        return;
+    }
+
+    roomsToRender.forEach(room => {
+        if (room.use) {
+            const roomCard = document.createElement("div")
+            roomCard.className = "room-card"
+            roomCard.innerHTML = `
+                <div class="room-header">
+                    <h2 class="room-title">${room.title}</h2>
+                    <div class="room-status">
+                        <span class="status-dot green"></span>
+                    </div>
+                </div>
+                <div class="host-name">${room.nickname || room.username} 선생님</div>
+                <div class="room-tags">
+                    <span class="tag subject-tag">${room.subject}</span>
+                    <span class="tag level-tag">${room.level}</span>
+                </div>
+            `
+            roomCard.dataset.roomId = room._id;
+            roomGrid.appendChild(roomCard);
+        }
+    })
+}
+
+
+function filterRooms() {
+    const selectedSubject = subjectFilter.value
+    const selectedLevel = levelFilter.value
+
+    const filtered = allRooms.filter(room => {
+        const matchSubject = (selectedSubject === "all" || room.subject === selectedSubject)
+        const matchLevel = (selectedLevel === "all" || room.level === selectedLevel)
+        return matchSubject && matchLevel
+    });
+
+    renderRooms(filtered);
+}
+
 async function fetchRooms() {
     try {
-        const response = await fetch("/room/rooms")
+        const selectedSubject = subjectFilter ? subjectFilter.value : "all"
+        const selectedLevel = levelFilter ? levelFilter.value : "all"
+
+        let url = "/room/rooms"
+        
+        if (selectedSubject !== "all") {
+            url = `/room/bySubject?subject=${encodeURIComponent(selectedSubject)}`
+        } else if (selectedLevel !== "all") {
+            url = `/room/byLevel?level=${encodeURIComponent(selectedLevel)}`
+        }
+
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${_token}`
+            }
+        })
 
         if (!response.ok) {
             throw new Error("방 정보를 불러오지 못했습니다")
         }
 
-        const rooms = await response.json()
-
-        roomGrid.innerHTML = ""
-
-        if (rooms.length === 0) {
-            roomGrid.innerHTML = `<p class="no-room">개설된 방이 없습니다.</p>`;
-            return;
-        }
-
-        rooms.forEach(room => {
-            const roomCard = document.createElement("div")
-            roomCard.className = "room-card"
-
-            // 카드 내부 디자인
-            roomCard.innerHTML = `
-            <div class="room-header">
-                <h2 class="room-title">${room.title}</h2>
-                <div class="room-status">
-                    <span class="status-dot green"></span>
-                </div>
-            </div>
-            <div class="host-name">${room.nickname} 선생님</div>
-            <div class="room-tags">
-                <span class="tag subject-tag">${room.subject}</span>
-                <span class="tag level-tag">${room.level}</span>
-            </div>
-            `
-
-            roomCard.dataset.roomId = room._id
-
-            roomGrid.appendChild(roomCard)
-        });
+        allRooms = await response.json(); 
+        renderRooms(allRooms)
     } catch (error) {
         console.error(error)
     }
-
 }
+
+subjectFilter.addEventListener("change", filterRooms)
+levelFilter.addEventListener("change", filterRooms)
 
 // 방 생성 버튼 이벤트===========================================
 

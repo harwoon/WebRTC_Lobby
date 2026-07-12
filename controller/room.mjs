@@ -37,14 +37,14 @@ export async function deleteRoom(req, res) {
 
 // 과목별 방 가져오기
 export async function getRoomsbySubject(req,res){
-    const {subject} = req.body
+    const {subject} = req.query
     const rooms = await roomRepository.getBySubject(subject)
     res.status(200).json(rooms)
 }
 
 // 레벨별 방 가져오기
 export async function getRoomsbyLevel(req,res){
-    const {level} = req.body
+    const {level} = req.query
     const rooms = await roomRepository.getByLevel(level)
     res.status(200).json(rooms)
 }
