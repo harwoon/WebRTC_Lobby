@@ -10,6 +10,14 @@ window.onload = function() {
         e.preventDefault()
         await sendit()
     })
+
+    // 회원 가입 폼 입력 css 초기화
+    const fieldsToReset = ["userid", "userpw", "userpw_re", "nickname", "username", "email"]
+    fieldsToReset.forEach((id) => {
+        document.getElementById(id).addEventListener("input", () => {
+            document.getElementById(id).classList.remove("check-success", "check-fail")
+        })
+    })
 }
 
 const expIdText = /^[A-Za-z0-9]{4,20}$/     // userid: 4자이상 20자 이하의 영문자 또는 숫자
@@ -17,24 +25,39 @@ const expPwTest = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()])[A-Za-z\d!@#$%^&*()]
 const expEmailTest = /^[A-Za-z0-9\-\.]+@[A-Za-z0-9\-]+\.[A-Za-z]+$/
 
 async function sendit() {
+    const userType = document.getElementsByName("userType")
     const userid = document.getElementById("userid")
     const userpw = document.getElementById("userpw")
     const userpw_re = document.getElementById("userpw_re")
     const nickname = document.getElementById("nickname")
     const username = document.getElementById("username")
     const email = document.getElementById("email")
-    const userType = document.getElementsByName("userType")
+
+    // 선생님 or 학생
+        // 1. userType을 HTMLCollection이라는 유사배열 형태로 가져옴
+        // 2. Array.from(): 진짜 배열로 변환
+        // 3. .some(): 배열 요소 중 하나라도 조건을 만족하면 true 반환 (각 라디오버튼r에 대해 checked 되었는지 검사)
+    const typeChecked = Array.from(userType).some((r) => r.checked)
+
+    if(!typeChecked) {
+        alert("선생님/학생 중 하나를 선택하세요")
+        return
+    }
 
     // 아이디
     if(userid.value === "") {
         alert("아이디를 입력하세요")
         userid.focus()
+        userid.classList.remove("check-success")
+        userid.classList.add("check-fail")
         return
     }
 
     if(!expIdText.test(userid.value)) {
         alert("아이디는 4자 이상 20자 이하의 영문자 또는 숫자로 입력하세요")
         userid.focus()
+        userid.classList.remove("check-success")
+        userid.classList.add("check-fail")
         return
     }
 
@@ -47,13 +70,17 @@ async function sendit() {
     // 비밀번호
     if(userpw.value === "") {
         alert("비밀번호를 입력하세요")
-        userid.focus()
+        userpw.focus()
+        userpw.classList.remove("check-success")
+        userpw.classList.add("check-fail")
         return
     }
 
     if(!expPwTest.test(userpw.value)) {
         alert("비밀번호는 8자 이상 20자 이하이며 영문자, 숫자, 특수문자를 포함해야 합니다")
         userpw.focus()
+        userpw.classList.remove("check-success")
+        userpw.classList.add("check-fail")
         return
     }
 
@@ -61,12 +88,16 @@ async function sendit() {
     if(userpw_re.value === "") {
         alert("비밀번호 확인을 입력하세요")
         userpw_re.focus()
+        userpw_re.classList.remove("check-success")
+        userpw_re.classList.add("check-fail")
         return
     }
     
     if(userpw.value !== userpw_re.value) {
         alert("비밀번호가 일치하지 않습니다")
         userpw_re.focus()
+        userpw_re.classList.remove("check-success")
+        userpw_re.classList.add("check-fail")
         return
     }
     
@@ -74,6 +105,8 @@ async function sendit() {
     if(nickname.value === "") {
         alert("닉네임을 입력하세요")
         nickname.focus()
+        nickname.classList.remove("check-success")
+        nickname.classList.add("check-fail")
         return
     }
 
@@ -81,6 +114,8 @@ async function sendit() {
     if(username.value === "") {
         alert("이름을 입력하세요")
         username.focus()
+        username.classList.remove("check-success")
+        username.classList.add("check-fail")
         return
     }
 
@@ -88,23 +123,16 @@ async function sendit() {
     if(email.value === "") {
         alert("이메일을 입력하세요")
         email.focus()
+        email.classList.remove("check-success")
+        email.classList.add("check-fail")
         return
     }
 
     if(!expEmailTest.test(email.value)) {
         alert("이메일 형식이 올바르지 않습니다")
         email.focus()
-        return
-    }
-
-    // 선생님 or 학생
-        // 1. userType을 HTMLCollection이라는 유사배열 형태로 가져옴
-        // 2. Array.from(): 진짜 배열로 변환
-        // 3. .some(): 배열 요소 중 하나라도 조건을 만족하면 true 반환 (각 라디오버튼r에 대해 checked 되었는지 검사)
-    const typeChecked = Array.from(userType).some((r) => r.checked)
-
-    if(!typeChecked) {
-        alert("선생님/학생 중 하나를 선택하세요")
+        email.classList.remove("check-success")
+        email.classList.add("check-fail")
         return
     }
 
@@ -148,12 +176,16 @@ async function duplCheck() {
     if(userid.value === "") {
         alert("아이디를 먼저 입력하세요")
         userid.focus()
+        userid.classList.remove("check-success")
+        userid.classList.add("check-fail")
         return
     }
     
     if(!expIdText.test(userid.value)) {
         alert("아이디는 4자 이상 20자 이하의 영문자 또는 숫자로 입력하세요")
         userid.focus()
+        userid.classList.remove("check-success")
+        userid.classList.add("check-fail")
         return
     }
 
@@ -164,9 +196,14 @@ async function duplCheck() {
         if (data.exists) {
             alert("이미 사용중인 아이디입니다")
             userid.dataset.checked = "false"   // 중복이니까 false
+            userid.focus()
+            userid.classList.remove("check-success")
+            userid.classList.add("check-fail")
         } else {
             alert("사용 가능한 아이디입니다")
             userid.dataset.checked = "true"    // 사용 가능하니까 true
+            userid.classList.remove("check-fail")
+            userid.classList.add("check-success")
         }
     } catch (err) {
         console.error(err)

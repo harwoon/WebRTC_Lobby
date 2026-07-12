@@ -49,7 +49,6 @@ async function sendit() {
         localStorage.setItem("_id", data.user._id)
         alert("로그인 성공")
 
-
         if (data.user.userType === "teacher") {
             window.location.href = "/lobby/teacher"
         } else if (data.user.userType === "student") {
